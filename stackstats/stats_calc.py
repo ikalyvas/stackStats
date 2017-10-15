@@ -68,15 +68,15 @@ def main():
                 batch = ';'.join(str(el) for el in answer_set[start:end])
                 comments_response = requests.get(COMMENTS_URL % (batch, since_date, until_date))
                 comments_dict = json.loads(comments_response.text)
-                comments.extend(comments_dict)
+                comments.extend(comments_dict['items'])
                 start = start + 100
                 end = end + 100
 
         if batch_modulo:
-            remaining_batch = ';'.join(str(el) for el in answer_set[end:end+batch_modulo])
+            remaining_batch = ';'.join(str(el) for el in answer_set[start:start + batch_modulo])
             comments_response = requests.get(COMMENTS_URL % (remaining_batch, since_date, until_date))
             comments_dict = json.loads(comments_response.text)
-            comments.extend(comments_dict)
+            comments.extend(comments_dict['items'])
 
     elif not batch_size:
         if batch_modulo:
@@ -84,9 +84,6 @@ def main():
             comments_response = requests.get(COMMENTS_URL % (batch, since_date, until_date))
             comments_dict = json.loads(comments_response.text)
             comments.extend(comments_dict)
-
-    else:
-        pass
 
     logger.info("Done")
 
@@ -97,7 +94,7 @@ def main():
 
     logger.info("Calculating average score of accepted answers")
     scores_of_accepted_answers = [i['score'] for i in accepted_answers]
-    avg_score_of_accepted_answers = float(sum(scores_of_accepted_answers)) / len(scores_of_accepted_answers)
+    accepted_answers_average_score = float(sum(scores_of_accepted_answers)) / len(scores_of_accepted_answers)
     logger.info("Done")
 
 
@@ -105,16 +102,45 @@ def main():
 
 
     question_ids = [i['question_id'] for i in stats_list]
-    cnt = Counter(question_ids)
-    avg_answers_per_qid = float(sum(cnt.values())) / len(cnt.keys())
+    cnt_qid = Counter(question_ids)
+    average_answers_per_question = float(sum(cnt_qid.values())) / len(cnt_qid.keys())
     logger.info("Done")
 
 
-    logger.warning("Total accepted answers %s" % str(total_accepted_answers))
-    logger.warning("Average score of accepted answers %s" % str(avg_score_of_accepted_answers))
-    logger.warning("Average answers per qid %s" % str(avg_answers_per_qid))
-    logger.warning("Comment data %s" % comments)
+    logger.info("Calculating number of comments for top 10 answers(based on score)")
 
+    top_10_answers_on_score = sorted(stats_list, key=lambda item: item['score'],reverse=True)[:10]
+
+    answers_in_comments_list = [item['post_id'] for item in comments]
+    cnt_ans = Counter(answers_in_comments_list)
+    top_10_answers_comment_count = {}
+    for answer in top_10_answers_on_score:
+        if answer['answer_id'] in cnt_ans:
+            top_10_answers_comment_count[answer['answer_id']] = cnt_ans[answer['answer_id']]
+        else:
+            top_10_answers_comment_count[answer['answer_id']] = 0
+
+
+    with open('statslist.log','w') as f:
+        f.write(str(stats_list))
+
+    logger.info("Done")
+
+
+
+    logger.warning("Total accepted answers %s" % str(total_accepted_answers))
+    logger.warning("Average score of accepted answers %s" % str(accepted_answers_average_score))
+    logger.warning("Average answers per qid %s" % str(average_answers_per_question))
+    logger.warning("Comment data %s" % comments)
+    logger.warning("Comment count for top 10 answers %s" % str(top_10_answers_comment_count))
+
+    results = {"total_accepted_answers":total_accepted_answers,
+               "accepted_answers_average_score":accepted_answers_average_score,
+               "average_answers_per_question":average_answers_per_question,
+               "top_10_answers_comment_count":top_10_answers_comment_count
+               }
+
+    logger.info("Results:%s" % json.dumps(results))
 
 
 if __name__ == '__main__':
