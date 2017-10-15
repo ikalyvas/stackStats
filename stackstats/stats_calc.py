@@ -121,18 +121,18 @@ def main():
             top_10_answers_comment_count[answer['answer_id']] = 0
 
 
-    with open('statslist.log','w') as f:
-        f.write(str(stats_list))
+   # with open('statslist.log','w') as f:
+   #     f.write(str(stats_list))
 
     logger.info("Done")
 
 
 
-    logger.warning("Total accepted answers %s" % str(total_accepted_answers))
-    logger.warning("Average score of accepted answers %s" % str(accepted_answers_average_score))
-    logger.warning("Average answers per qid %s" % str(average_answers_per_question))
-    logger.warning("Comment data %s" % comments)
-    logger.warning("Comment count for top 10 answers %s" % str(top_10_answers_comment_count))
+    #logger.warning("Total accepted answers %s" % str(total_accepted_answers))
+    #logger.warning("Average score of accepted answers %s" % str(accepted_answers_average_score))
+    #logger.warning("Average answers per qid %s" % str(average_answers_per_question))
+    #logger.warning("Comment data %s" % comments)
+    #logger.warning("Comment count for top 10 answers %s" % str(top_10_answers_comment_count))
 
     results = {"total_accepted_answers":total_accepted_answers,
                "accepted_answers_average_score":accepted_answers_average_score,
