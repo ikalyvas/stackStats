@@ -1,9 +1,11 @@
 import requests
+import sys
 import json
 import logging
 from datetime import datetime
 from argparse import ArgumentParser
 from collections import Counter
+import pprint
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -41,7 +43,7 @@ def main():
     has_more = True
     while has_more:
         response = requests.get(ANSWERS_URL % (page, pagesize, since_date, until_date))
-        stats_dict = json.loads(response.text)
+        stats_dict = response.json()
         stats_list.extend(stats_dict['items'])
         if stats_dict['has_more'] is True:
             page += 1
@@ -52,7 +54,7 @@ def main():
 
 
     answer_set = [element['answer_id'] for element in stats_list]
-    logger.info('Retrieving the comment data for a given set of answers %s' % (str(answer_set)))
+    logger.info('Retrieving the comment data for a given set of answers')
     comments = []
     has_more_comments = True
     page = 1
@@ -66,7 +68,7 @@ def main():
                 batch = ';'.join(str(el) for el in answer_set[start:end])
                 while has_more_comments:
                     comments_response = requests.get(COMMENTS_URL % (batch, page, pagesize))
-                    comments_dict = json.loads(comments_response.text)
+                    comments_dict = comments_response.json()
                     comments.extend(comments_dict['items'])
                     if comments_dict['has_more'] is True:
                         page += 1
@@ -83,7 +85,7 @@ def main():
             remaining_batch = ';'.join(str(el) for el in answer_set[start:start + batch_modulo])
             while has_more_comments:
                 comments_response = requests.get(COMMENTS_URL % (remaining_batch, page, pagesize))
-                comments_dict = json.loads(comments_response.text)
+                comments_dict = comments_response.json()
                 comments.extend(comments_dict['items'])
                 if comments_dict['has_more'] is True:
                     page += 1
@@ -96,7 +98,7 @@ def main():
             batch = ';'.join(str(el) for el in answer_set)
             while has_more_comments:
                 comments_response = requests.get(COMMENTS_URL % (batch, page, pagesize))
-                comments_dict = json.loads(comments_response.text)
+                comments_dict = comments_response.json()
                 comments.extend(comments_dict['items'])
                 if comments_dict['has_more'] is True:
                     page += 1
@@ -146,7 +148,12 @@ def main():
                "top_10_answers_comment_count":top_10_answers_comment_count
                }
 
-    logger.info("Results:%s" % json.dumps(results))
+    if args.output == 'json':
+        logger.info(pprint.pformat(results))
+    elif args.output == 'html':
+        pass
+        #TODO html handling and tabular handling as well
+
 
 
 if __name__ == '__main__':
