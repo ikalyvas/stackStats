@@ -9,7 +9,8 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
 ANSWERS_URL =  "http://api.stackexchange.com/2.2/answers?page=%s&pagesize=%s&fromdate=%s&todate=%s&order=desc&sort=activity&site=stackoverflow"
-COMMENTS_URL = "http://api.stackexchange.com/2.2/answers/%s/comments?fromdate=%s&todate=%s&order=desc&sort=creation&site=stackoverflow"
+COMMENTS_URL = "http://api.stackexchange.com/2.2/answers/%s/comments?page=%s&pagesize=%s&order=desc&sort=creation&site=stackoverflow"
+
 
 def convert_to_milis(date_string):
 
@@ -33,9 +34,6 @@ def main():
     since_date = convert_to_milis(args.since)
     until_date = convert_to_milis(args.until)
 
-
-
-
     logger.info('Retrieving the answer data from %s until %s' % (since_date, until_date))
     stats_list = []
     page = 1
@@ -46,7 +44,6 @@ def main():
         stats_dict = json.loads(response.text)
         stats_list.extend(stats_dict['items'])
         if stats_dict['has_more'] is True:
-            #stats_list.append(stats_dict['items'])
             page += 1
             continue
         else:
@@ -54,11 +51,12 @@ def main():
     logger.info('Done')
 
 
-
-
     answer_set = [element['answer_id'] for element in stats_list]
     logger.info('Retrieving the comment data for a given set of answers %s' % (str(answer_set)))
     comments = []
+    has_more_comments = True
+    page = 1
+    pagesize = 100
     batch_size = len(answer_set) / 100
     batch_modulo = len(answer_set) % 100
     start = 0
@@ -66,24 +64,45 @@ def main():
     if batch_size:
         for i in range(batch_size):
                 batch = ';'.join(str(el) for el in answer_set[start:end])
-                comments_response = requests.get(COMMENTS_URL % (batch, since_date, until_date))
-                comments_dict = json.loads(comments_response.text)
-                comments.extend(comments_dict['items'])
+                while has_more_comments:
+                    comments_response = requests.get(COMMENTS_URL % (batch, page, pagesize))
+                    comments_dict = json.loads(comments_response.text)
+                    comments.extend(comments_dict['items'])
+                    if comments_dict['has_more'] is True:
+                        page += 1
+                        continue
+                    else:
+                        has_more_comments = False
+
                 start = start + 100
                 end = end + 100
+                has_more_comments = True
+                page = 1
 
         if batch_modulo:
             remaining_batch = ';'.join(str(el) for el in answer_set[start:start + batch_modulo])
-            comments_response = requests.get(COMMENTS_URL % (remaining_batch, since_date, until_date))
-            comments_dict = json.loads(comments_response.text)
-            comments.extend(comments_dict['items'])
+            while has_more_comments:
+                comments_response = requests.get(COMMENTS_URL % (remaining_batch, page, pagesize))
+                comments_dict = json.loads(comments_response.text)
+                comments.extend(comments_dict['items'])
+                if comments_dict['has_more'] is True:
+                    page += 1
+                    continue
+                else:
+                    has_more_comments = False
 
     elif not batch_size:
         if batch_modulo:
             batch = ';'.join(str(el) for el in answer_set)
-            comments_response = requests.get(COMMENTS_URL % (batch, since_date, until_date))
-            comments_dict = json.loads(comments_response.text)
-            comments.extend(comments_dict)
+            while has_more_comments:
+                comments_response = requests.get(COMMENTS_URL % (batch, page, pagesize))
+                comments_dict = json.loads(comments_response.text)
+                comments.extend(comments_dict['items'])
+                if comments_dict['has_more'] is True:
+                    page += 1
+                    continue
+                else:
+                    has_more_comments = False
 
     logger.info("Done")
 
@@ -97,19 +116,16 @@ def main():
     accepted_answers_average_score = float(sum(scores_of_accepted_answers)) / len(scores_of_accepted_answers)
     logger.info("Done")
 
-
     logger.info("Calculating average answer count per question")
-
 
     question_ids = [i['question_id'] for i in stats_list]
     cnt_qid = Counter(question_ids)
     average_answers_per_question = float(sum(cnt_qid.values())) / len(cnt_qid.keys())
     logger.info("Done")
 
-
     logger.info("Calculating number of comments for top 10 answers(based on score)")
 
-    top_10_answers_on_score = sorted(stats_list, key=lambda item: item['score'],reverse=True)[:10]
+    top_10_answers_on_score = sorted(stats_list, key=lambda item: item['score'], reverse=True)[:10]
 
     answers_in_comments_list = [item['post_id'] for item in comments]
     cnt_ans = Counter(answers_in_comments_list)
@@ -120,19 +136,9 @@ def main():
         else:
             top_10_answers_comment_count[answer['answer_id']] = 0
 
-
-   # with open('statslist.log','w') as f:
-   #     f.write(str(stats_list))
-
     logger.info("Done")
 
 
-
-    #logger.warning("Total accepted answers %s" % str(total_accepted_answers))
-    #logger.warning("Average score of accepted answers %s" % str(accepted_answers_average_score))
-    #logger.warning("Average answers per qid %s" % str(average_answers_per_question))
-    #logger.warning("Comment data %s" % comments)
-    #logger.warning("Comment count for top 10 answers %s" % str(top_10_answers_comment_count))
 
     results = {"total_accepted_answers":total_accepted_answers,
                "accepted_answers_average_score":accepted_answers_average_score,
