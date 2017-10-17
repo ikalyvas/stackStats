@@ -10,8 +10,14 @@ from html import HTML
 logger = logging.getLogger('main')
 logging.basicConfig(level=logging.INFO)
 
-ANSWERS_URL =  "http://api.stackexchange.com/2.2/answers?page={page}&pagesize={pagesize}&fromdate={since_date}&todate={until_date}&order=desc&sort=activity&site=stackoverflow"
-COMMENTS_URL = "http://api.stackexchange.com/2.2/answers/{batch}/comments?page={page}&pagesize={pagesize}&order=desc&sort=creation&site=stackoverflow"
+ANSWERS_URL = "http://api.stackexchange.com/2.2/answers?" \
+              "page={page}&pagesize={pagesize}&" \
+              "fromdate={since_date}&todate={until_date}&" \
+              "order=desc&sort=activity&site=stackoverflow"
+
+COMMENTS_URL ="http://api.stackexchange.com/2.2/answers/{batch}" \
+              "/comments?page={page}&pagesize={pagesize}" \
+              "&order=desc&sort=creation&site=stackoverflow"
 
 
 class Stats(object):
@@ -30,7 +36,7 @@ class Stats(object):
     def convert_to_milis(date_string):
 
         dt = datetime.strptime(date_string, "%Y-%m-%d %H:%M:%S")
-        epoch = datetime.fromtimestamp(0)
+        epoch = datetime.utcfromtimestamp(0)
         milis = (dt - epoch).total_seconds() * 1000
         milis = '{:.0f}'.format(milis)[:10]
 
