@@ -14,3 +14,9 @@ You need to run the following commands in order to install the package
 ## How to run the application
 
  * stats --since "2016-06-2 10:00:00" --until "2016-06-2 11:00:00" --output-format json/html/tab
+
+## How to run the tests
+
+ * cd stackStats
+ * python setup.py test
+ 
