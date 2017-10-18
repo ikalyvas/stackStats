@@ -26,12 +26,12 @@ class TestStackStats(unittest.TestCase):
         self.assertEqual(1512142440, self.stats.convert_to_milis(date_3))
 
     @patch.object(Stats, 'get_all_results')
-    def test_assert_get_answers(self, mock_get_all_res):
+    def test_assert_get_answers_get_all_is_called(self, mock_get_all_res):
         self.stats.get_answers()
         self.assertTrue(mock_get_all_res.called)
 
     @patch('stackstats.stats_calc.requests')
-    def test_assert_get_answers_1(self, mock_requests):
+    def test_assert_get_answers_returns_OK(self, mock_requests):
         response = Mock()
         mock_requests.get.return_value = response
         response.json.return_value = {u'has_more': False,
@@ -50,3 +50,35 @@ class TestStackStats(unittest.TestCase):
                                                 }])
 
 
+    @patch('stackstats.stats_calc.requests')
+    def test_assert_get_answers_stops_when_has_more_is_False(self, mock_requests):
+        response = Mock()
+        mock_requests.get.return_value = response
+        response.json.side_effect = [{u'has_more': True,
+                                      u'items':
+                                          [{u'question_id': 1,
+                                            u'last_activity_date': 14,
+                                            u'creation_date': None,
+                                            u'score': 25, u'owner': 'me'
+                                                }]
+                                      },
+                                     {u'has_more': False,
+                                      u'items':
+                                          [{u'question_id': 2,
+                                            u'last_activity_date': 28,
+                                            u'creation_date': None,
+                                            u'score': 26, u'owner': 'you'
+                                                }]
+                                      }
+                                     ]
+
+        self.stats.get_answers()
+        self.assertEqual(self.stats.stats_list, [{u'question_id': 1,
+                                            u'last_activity_date': 14,
+                                            u'creation_date': None,
+                                            u'score': 25, u'owner': 'me'},
+                                                 {u'question_id': 2,
+                                            u'last_activity_date': 28,
+                                            u'creation_date': None,
+                                            u'score': 26, u'owner': 'you'
+                                                }])
