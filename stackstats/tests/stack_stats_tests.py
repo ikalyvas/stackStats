@@ -8,11 +8,113 @@ class TestStackStats(unittest.TestCase):
 
     def setUp(self):
         self.stats = Stats('2016-1-1 00:00:0','2016-1-1 00:00:01')
-        pass
+        self.stats_list_data = [{
+            "owner": {
+                "reputation": 816,
+                "user_id": 4695752,
+                "user_type": "registered",
+                "accept_rate": 68,
+                "profile_image": "https://graph.facebook.com/10203574071421073/picture?type=large",
+                "display_name": "Jan van der Vegt",
+                "link": "https://stackoverflow.com/users/4695752/jan-van-der-vegt"
+            },
+            "is_accepted": False,
+            "score": 1,
+            "last_activity_date": 1464862173,
+            "creation_date": 1464862173,
+            "answer_id": 37588832,
+            "question_id": 37588793
+        },
+            {
+                "owner": {
+                    "reputation": 1929,
+                    "user_id": 2176425,
+                    "user_type": "registered",
+                    "accept_rate": 75,
+                    "profile_image": "https://i.stack.imgur.com/iCJ8C.jpg?s=128&g=1",
+                    "display_name": "huuuk",
+                    "link": "https://stackoverflow.com/users/2176425/huuuk"
+                },
+                "is_accepted": False,
+                "score": 2,
+                "last_activity_date": 1464862165,
+                "creation_date": 1464862165,
+                "answer_id": 37588831,
+                "question_id": 37588515
+            },
+            {
+                "owner": {
+                    "reputation": 2193,
+                    "user_id": 5217524,
+                    "user_type": "registered",
+                    "accept_rate": 67,
+                    "profile_image": "https://i.stack.imgur.com/uYOQJ.png?s=128&g=1",
+                    "display_name": "phongvan",
+                    "link": "https://stackoverflow.com/users/5217524/phongvan"
+                },
+                "is_accepted": True,
+                "score": 4,
+                "last_activity_date": 1464862154,
+                "creation_date": 1464862154,
+                "answer_id": 37588826,
+                "question_id": 37588646
+            },
+            {
+                "owner": {
+                    "reputation": 2193,
+                    "user_id": 5217524,
+                    "user_type": "registered",
+                    "accept_rate": 67,
+                    "profile_image": "https://i.stack.imgur.com/uYOQJ.png?s=128&g=1",
+                    "display_name": "phongvan",
+                    "link": "https://stackoverflow.com/users/5217524/phongvan"
+                },
+                "is_accepted": True,
+                "score": 14,
+                "last_activity_date": 1464862154,
+                "creation_date": 1464862154,
+                "answer_id": 1,
+                "question_id": 37588646
+            }
+        ]
+        self.accepted_answs_data = [{
+                "owner": {
+                    "reputation": 2193,
+                    "user_id": 5217524,
+                    "user_type": "registered",
+                    "accept_rate": 67,
+                    "profile_image": "https://i.stack.imgur.com/uYOQJ.png?s=128&g=1",
+                    "display_name": "phongvan",
+                    "link": "https://stackoverflow.com/users/5217524/phongvan"
+                },
+                "is_accepted": True,
+                "score": 14,
+                "last_activity_date": 1464862154,
+                "creation_date": 1464862154,
+                "answer_id": 1,
+                "question_id": 37588646
+            }, {
+                "owner": {
+                    "reputation": 2193,
+                    "user_id": 5217524,
+                    "user_type": "registered",
+                    "accept_rate": 67,
+                    "profile_image": "https://i.stack.imgur.com/uYOQJ.png?s=128&g=1",
+                    "display_name": "phongvan",
+                    "link": "https://stackoverflow.com/users/5217524/phongvan"
+                },
+                "is_accepted": True,
+                "score": 4,
+                "last_activity_date": 1464862154,
+                "creation_date": 1464862154,
+                "answer_id": 37588826,
+                "question_id": 37588646
+            }
+        ]
+
 
     def tearDown(self):
         self.stats = None
-        pass
 
     def test_convert_milis(self):
         date_1 = "2016-06-2 10:00:00"
@@ -82,3 +184,15 @@ class TestStackStats(unittest.TestCase):
                                             u'creation_date': None,
                                             u'score': 26, u'owner': 'you'
                                                 }])
+
+
+
+    def test_return_total_num_accepted_answers(self):
+
+        self.stats.stats_list = self.stats_list_data
+        self.assertEqual(2, self.stats.get_total_num_accepted_answers())
+
+    def test_get_scores_of_accepted_answers(self):
+        acc_answ_avg_score = self.stats.get_scores_of_accepted_answers(self.accepted_answs_data)
+        self.assertEqual(9, acc_answ_avg_score)
+
