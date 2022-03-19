@@ -1,3 +1,3 @@
-libraries{
+template_methods{
   python
 }
