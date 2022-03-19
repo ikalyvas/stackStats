@@ -1,3 +1,4 @@
 template_methods{
-  python
+  build
+  unit_test
 }
