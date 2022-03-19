@@ -1,3 +1,4 @@
-libraries{
-  python
+template_methods{
+  build
+  unit_test
 }
